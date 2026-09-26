@@ -74,9 +74,8 @@ For each ground-station pass, predicts whether the full payload can be sent and,
    - extra training data in the problem regions.
 2. *Integrate the predictors.* Combine predicted energy, downlink feasibility and compression ratio with live battery charge and daylight/eclipse timing into one decision policy. Start rule-based, then move to reinforcement learning.
 3. *Priority-aware scheduling.* Let urgent detections (fire, flood, disaster imagery) jump ahead of routine work, even when they aren't the cheapest option.
-4. *Hardware-in-the-loop testing.* Run on an emulated onboard computer with realistic CPU and radio power draws, to check whether the simulated ranges hold up.
-5. *Closed-loop evaluation of store vs. send.* Test the full store/process/transmit loop over simulated timelines of many orbits, tracking battery charge, stored backlog and total data sent.
-6. *Real data, where possible.* Check both predictors against real subsystem telemetry or a ground-based RF testbed before claiming accuracy beyond simulation.
+4. *Closed-loop evaluation of store vs. send.* Test the full store/process/transmit loop over simulated timelines of many orbits, tracking battery charge, stored backlog and total data sent.
+5. *Real data, where possible.* Check both predictors against real subsystem telemetry or a ground-based RF testbed before claiming accuracy beyond simulation.
 
 *Reporting to add:* because can_send_all is a yes/no output, report accuracy, F1 and the false "can send" rate alongside R².
 
