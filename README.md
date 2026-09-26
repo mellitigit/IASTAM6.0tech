@@ -50,6 +50,7 @@ Predicts how much energy a task will use (*receive + compute + transmit*) before
 - *By task type:* weakest on object detection (R² 0.566), strongest on hyperspectral processing (R² 0.936). MAPE stays between 0.20 and 0.26 for every type.
 - *Bias:* errors are balanced (46.2% over-predictions vs. 53.8% under-predictions).
 - *Known limitation:* the ranking of important inputs makes physical sense (CPU cycles, CPU frequency, compute power). But when one input is changed at a time, the predicted energy doesn't always move steadily in the expected direction. This must be fixed before the model runs without supervision.
+- *Link to Used Dataset:* https://drive.google.com/drive/folders/1kQYSA1ZckSWrlfvyvgcXVGEuLLEpXbOO?usp=drive_link
 
 ### 2. Downlink-feasibility and adaptive-compression predictor
 
