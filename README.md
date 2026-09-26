@@ -2,6 +2,10 @@
 
 *Energy-aware task scheduling, downlink prediction and adaptive compression*
 
+
+<img width="2048" height="932" alt="825256894_1563809201608487_5803797194678458047_n" src="https://github.com/user-attachments/assets/36dabca3-363b-40d4-9bd1-55210c9f6533" />
+
+
 ## The problem
 
 A CubeSat generates data all the time but is limited by three things: battery energy (recharged only in sunlight), onboard compute and memory, and short ground-station passes. For every task or data product, the satellite has to decide on its own whether to:
