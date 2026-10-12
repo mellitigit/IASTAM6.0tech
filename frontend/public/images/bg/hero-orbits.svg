@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" fill="none" stroke="#6f7f4a" stroke-linecap="round">
+  <defs>
+    <g id="sat" stroke-width="1.6">
+      <rect x="-9" y="-6" width="18" height="12" rx="2"/>
+      <rect x="-34" y="-5" width="21" height="10"/><rect x="13" y="-5" width="21" height="10"/>
+      <path d="M-24 -5v10M-17 -5v10M24 -5v10M17 -5v10M0 -6v-9M-4 -15h8"/>
+    </g>
+  </defs>
+  <g opacity=".42" stroke-width="1.3">
+    <ellipse cx="800" cy="520" rx="720" ry="250" transform="rotate(-14 800 520)"/>
+    <ellipse cx="800" cy="520" rx="560" ry="360" transform="rotate(32 800 520)" stroke-dasharray="3 9"/>
+    <ellipse cx="800" cy="520" rx="400" ry="150" transform="rotate(-58 800 520)"/>
+    <circle cx="800" cy="520" r="470" stroke-dasharray="1 11"/>
+  </g>
+  <g opacity=".5">
+    <use href="#sat" transform="translate(205 646) rotate(-14) scale(.9)"/>
+    <use href="#sat" transform="translate(1372 262) rotate(28) scale(.8)"/>
+    <use href="#sat" transform="translate(468 168) rotate(-40) scale(.7)"/>
+    <use href="#sat" transform="translate(1262 842) rotate(18) scale(.75)"/>
+  </g>
+  <g opacity=".4" stroke-width="1.2">
+    <path d="M205 646L468 168L1372 262L1262 842" stroke-dasharray="2 10"/>
+    <path d="M120 120h14M127 113v14M1470 160h14M1477 153v14M1480 760h14M1487 753v14M110 880h14M117 873v14M760 70h14M767 63v14"/>
+    <circle cx="300" cy="360" r="2.5" fill="#6f7f4a"/><circle cx="1130" cy="520" r="2.5" fill="#6f7f4a"/><circle cx="640" cy="880" r="2.5" fill="#6f7f4a"/><circle cx="980" cy="130" r="2.5" fill="#6f7f4a"/><circle cx="1500" cy="470" r="2.5" fill="#6f7f4a"/>
+  </g>
+</svg>

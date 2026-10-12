@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" fill="none" stroke="#6f7f4a" stroke-linecap="round" stroke-linejoin="round">
+  <g opacity=".5" stroke-width="1.6">
+    <!-- ground station dish -->
+    <path d="M850 760c0-70 55-122 128-122" />
+    <path d="M850 760c70 0 122-55 122-122" />
+    <path d="M850 760a128 128 0 0 0 128-122M850 760a128 128 0 0 1 128 0" opacity="0"/>
+    <path d="M912 700l46-64M930 656l18-26"/>
+    <path d="M945 770v70M910 840h70M925 770l-14 70M965 770l14 70"/>
+    <circle cx="962" cy="632" r="6"/>
+    <!-- signal arcs -->
+    <path d="M1006 598c40-30 66-72 70-120" stroke-dasharray="2 9"/>
+    <path d="M1040 580c58-42 94-100 100-170" stroke-dasharray="2 9"/>
+    <path d="M1074 560c76-56 124-130 132-224" stroke-dasharray="2 9"/>
+  </g>
+  <g opacity=".45" stroke-width="1.4">
+    <!-- satellite -->
+    <g transform="translate(330 190) rotate(-24) scale(1.7)">
+      <rect x="-9" y="-6" width="18" height="12" rx="2"/>
+      <rect x="-34" y="-5" width="21" height="10"/><rect x="13" y="-5" width="21" height="10"/>
+      <path d="M-24 -5v10M-17 -5v10M24 -5v10M17 -5v10M0 -6v-9M-4 -15h8"/>
+    </g>
+    <!-- link + data packets -->
+    <path d="M372 214L930 626" stroke-dasharray="3 12"/>
+    <rect x="520" y="316" width="14" height="14" rx="2" transform="rotate(36 527 323)"/>
+    <rect x="650" y="412" width="14" height="14" rx="2" transform="rotate(36 657 419)"/>
+    <rect x="780" y="508" width="14" height="14" rx="2" transform="rotate(36 787 515)"/>
+  </g>
+</svg>
