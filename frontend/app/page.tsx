@@ -30,25 +30,21 @@ const enter = { duration: 0.9, ease };
 const leave = { duration: 0.75, ease };
 const LOCK_MS = 950;
 
-// One transition per screen, chosen for the move it makes:
-// hero <-> solution zooms through the spacecraft, solution <-> how slides sideways,
-// how <-> join wipes up like a curtain.
 const screenVariants: Record<ScreenId, Variants> = {
-  // The hero's own zoom is driven by scroll (see heroProgress); the screen itself only fades.
   hero: {
     initial: { opacity: 0 },
     animate: { opacity: 1, transition: { duration: 0.6, ease } },
     exit: { opacity: 0, transition: { duration: 0.6, ease } },
   },
   solution: {
-    initial: (d: Dir) => (d > 0 ? { opacity: 0, scale: 1.35, filter: "blur(8px)" } : { opacity: 0, x: "-12vw" }),
+    initial: (direction: Dir) => (direction > 0 ? { opacity: 0, scale: 1.35, filter: "blur(8px)" } : { opacity: 0, x: "-12vw" }),
     animate: { opacity: 1, x: 0, scale: 1, filter: "blur(0px)", transition: enter },
-    exit: (d: Dir) => (d > 0 ? { opacity: 0, x: "-12vw", transition: leave } : { opacity: 0, scale: 1.3, filter: "blur(8px)", transition: leave }),
+    exit: (direction: Dir) => (direction > 0 ? { opacity: 0, x: "-12vw", transition: leave } : { opacity: 0, scale: 1.3, filter: "blur(8px)", transition: leave }),
   },
   how: {
-    initial: (d: Dir) => (d > 0 ? { opacity: 0, x: "12vw" } : { opacity: 0, y: "-8vh" }),
+    initial: (direction: Dir) => (direction > 0 ? { opacity: 0, x: "12vw" } : { opacity: 0, y: "-8vh" }),
     animate: { opacity: 1, x: 0, y: 0, transition: enter },
-    exit: (d: Dir) => (d > 0 ? { opacity: 0, y: "-8vh", transition: leave } : { opacity: 0, x: "12vw", transition: leave }),
+    exit: (direction: Dir) => (direction > 0 ? { opacity: 0, y: "-8vh", transition: leave } : { opacity: 0, x: "12vw", transition: leave }),
   },
   join: {
     initial: { clipPath: "inset(100% 0% 0% 0%)" },
@@ -109,6 +105,7 @@ export default function Home() {
   const heroRaw = useMotionValue(0);
   const heroProgress = useSpring(heroRaw, { stiffness: 130, damping: 26, mass: 0.5 });
   const artScale = useTransform(heroProgress, [0, 1], [1, 4.2]);
+  const artY = useTransform(heroProgress, [0, 0.55, 1], ["0vh", "-2vh", "-12vh"]);
   const artOpacity = useTransform(heroProgress, [0, 0.62, 0.97], [1, 1, 0]);
   const titleScale = useTransform(heroProgress, [0, 0.6], [1, 1.7]);
   const titleOpacity = useTransform(heroProgress, [0, 0.4], [1, 0]);
@@ -246,7 +243,7 @@ export default function Home() {
       >
         {screen.id === "hero" && <>
           <motion.div className="sc-hero-title" style={{ opacity: titleOpacity, scale: titleScale }}><h1>ASTRA</h1></motion.div>
-          <motion.div className="sc-hero-art" style={{ scale: artScale, opacity: artOpacity, transformOrigin: "50% 24%" }}><FloatingSpacecraft /></motion.div>
+          <motion.div className="sc-hero-art" style={{ scale: artScale, y: artY, opacity: artOpacity, transformOrigin: "50% 24%" }}><FloatingSpacecraft /></motion.div>
         </>}
 
         {screen.id === "solution" && <div className="sc-inner sc-solution-grid">

@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .env
+# Model weights are large; fetch separately (see .env.example / README)
+app/ml/models/*.pt
+# Mission operations database (simulator runs)
+data/

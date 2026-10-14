@@ -1,86 +1,58 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
-import {
-  AnimatePresence,
-  MotionConfig,
-  motion,
-} from "framer-motion";
+import { useEffect, useState } from "react";
+import { AnimatePresence, MotionConfig } from "framer-motion";
+import DownlinkView from "./downlink-view";
+import HealthView from "./health-view";
+import MissionView from "./mission-view";
+import QueueView from "./queue-view";
 
-type View = "Overview" | "Data queue" | "Downlink planner" | "AI & models";
+// Only views backed by real backend models are shown.
+type View = "Mission ops" | "Satellite health" | "Downlink queue" | "Downlink prediction";
 
-const navigation: { label: View; icon: string }[] = [
-  { label: "Overview", icon: "◫" },
-  { label: "Data queue", icon: "▤" },
-  { label: "Downlink planner", icon: "⌁" },
-  { label: "AI & models", icon: "✳" },
+const navigation: { label: View; icon: string; model: string }[] = [
+  { label: "Mission ops", icon: "◉", model: "Live simulated spacecraft: DVM, watchdog, decision policy and link model in the loop" },
+  { label: "Satellite health", icon: "✚", model: "DVM CNN + FDIR watchdog" },
+  { label: "Downlink queue", icon: "▤", model: "Decision policy over DVM + watchdog outputs" },
+  { label: "Downlink prediction", icon: "⌁", model: "Link delivery model" },
 ];
 
-const queue = [
-  { id: "IMG-2048", title: "Thermal anomaly · Sector 07", source: "THERMAL CAMERA · 14:31:08", value: "98", action: "TRANSMIT FIRST", tone: "urgent", icon: "⌁", note: "Potential wildfire signature · alert protected" },
-  { id: "IMG-2047", title: "Coastal survey · Pass 18", source: "OPTICAL CAMERA · 14:28:42", value: "84", action: "COMPRESS → SEND", tone: "send", icon: "◉", note: "Clear scene · 4.2 MB after adaptive compression" },
-  { id: "SEN-8831", title: "Atmospheric sample", source: "ENVIRONMENTAL SENSOR · 14:26:15", value: "71", action: "STORE FOR PASS", tone: "store", icon: "≋", note: "Useful science data · next contact in 18 min" },
-  { id: "IMG-2045", title: "Cloud-covered ground track", source: "OPTICAL CAMERA · 14:21:53", value: "19", action: "DEFER REVIEW", tone: "defer", icon: "◌", note: "Low visibility · retain original until next model pass" },
-];
+type BackendStatus = "checking" | "online" | "offline";
 
-const models = [
-  { name: "Data value", description: "Science value & event detection", score: "96.8%", status: "ON ORBIT", glyph: "◉", bars: [42, 54, 48, 71, 65, 78, 69, 91, 84, 96] },
-  { name: "Link quality", description: "SNR, packet loss & delivery odds", score: "92.4%", status: "ON ORBIT", glyph: "⌁", bars: [65, 58, 75, 59, 82, 74, 89, 72, 92, 84] },
-  { name: "Resource forecast", description: "Battery, storage & compute budget", score: "98.1%", status: "ON ORBIT", glyph: "◒", bars: [78, 81, 77, 84, 83, 86, 88, 85, 92, 95] },
-  { name: "Anomaly watch", description: "Hardware & model fault detection", score: "99.2%", status: "NOMINAL", glyph: "✳", bars: [88, 84, 89, 91, 85, 92, 89, 95, 93, 98] },
-];
-
-function Sparkline({ values }: { values: number[] }) {
-  const points = values.map((value, index) => `${(index / (values.length - 1)) * 100},${36 - (value / 100) * 31}`).join(" ");
-  return <svg className="sparkline" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><polyline points={points} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" /></svg>;
+function useBackendStatus(): BackendStatus {
+  const [status, setStatus] = useState<BackendStatus>("checking");
+  useEffect(() => {
+    let cancelled = false;
+    const check = () =>
+      fetch("/api/backend-status", { cache: "no-store" })
+        .then((res) => !cancelled && setStatus(res.ok ? "online" : "offline"))
+        .catch(() => !cancelled && setStatus("offline"));
+    check();
+    const timer = window.setInterval(check, 30_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, []);
+  return status;
 }
 
-function Overview({ onView }: { onView: (view: View) => void }) {
-  return <motion.div key="Overview" className="view-content" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}>
-    <div className="welcome-row"><div><p className="eyebrow">MISSION CONTROL <span> / </span> ORBITAL-01</p><h1>Good afternoon,<br /><em>commander.</em></h1><p className="welcome-copy">Your satellite brain is making safe, smart decisions. Here’s the mission at a glance.</p></div><div className="mission-chip"><span className="mission-emblem"><Image src="/images/orbit-astronaut.jpeg" alt="Astronaut on a spacecraft" fill sizes="38px" priority /></span><span><small>ACTIVE MISSION</small><strong>ORBITAL-01 <i>LEO</i></strong></span><span className="chevron">⌄</span></div></div>
-    <div className="safety-banner"><span className="safety-icon">✓</span><div><strong>All safety rules holding</strong><span>Battery reserve protected · Thermal limit clear · Critical data never discarded</span></div><span className="banner-time">LAST CHECK 2 SEC AGO</span></div>
-    <section className="health-section"><div className="section-head"><div><span className="section-index">01</span><h2>Spacecraft health</h2><span className="live-tag"><i /> NOMINAL</span></div><button className="subtle-button" onClick={() => onView("Downlink planner")}>Full telemetry <span>↗</span></button></div>
-      <div className="metric-grid">
-        <Metric icon="◒" label="BATTERY" value="78" unit="%" detail="Reserve floor 35%" sub="+2.4% SUNLIGHT CHARGE" progress={78} />
-        <Metric icon="♨" label="TEMPERATURE" value="22.4" unit="°C" detail="Safe range −10 to 45°C" sub="THERMAL LOAD NOMINAL" progress={62} />
-        <Metric icon="▤" label="STORAGE" value="64" unit="%" detail="18.4 GB of 32 GB" sub="EST. 11H 42M REMAINING" progress={64} color="blue" />
-        <Metric icon="⌘" label="COMPUTE" value="37" unit="%" detail="Onboard processor" sub="2 MODEL RUNS ACTIVE" progress={37} color="blue" />
+export default function Dashboard() {
+  const [activeView, setActiveView] = useState<View>("Satellite health");
+  const backend = useBackendStatus();
+
+  return <main className="app-shell"><MotionConfig reducedMotion="user">
+    <aside className="sidebar">
+      <a className="product-brand" href="#" onClick={(event) => { event.preventDefault(); setActiveView("Satellite health"); }}><span className="brand-mark"><i /><i /><i /></span><span>ASTRA<small>MISSION INTELLIGENCE</small></span></a>
+      <span className="nav-label dash-nav-label">MODELS</span>
+      <nav className="side-nav" aria-label="Mission control views">{navigation.map((item) => <button key={item.label} onClick={() => setActiveView(item.label)} className={activeView === item.label ? "active" : ""} aria-current={activeView === item.label ? "page" : undefined} title={item.model}><span className="nav-icon">{item.icon}</span>{item.label}</button>)}</nav>
+      <div className="sidebar-bottom">
+        <div className="space-status"><span className="status-orbit">◉</span><span><small>BACKEND API</small><strong className={`backend-${backend}`}><i /> {backend === "checking" ? "CHECKING" : backend === "online" ? "ONLINE" : "OFFLINE"}</strong></span></div>
       </div>
+    </aside>
+    <section className="workspace">
+      <header className="topbar"><div className="breadcrumb"><span>MISSION CONTROL</span><i>/</i><b>{activeView.toUpperCase()}</b></div></header>
+      <div className="workspace-scroll"><AnimatePresence mode="wait" initial={false}>{activeView === "Mission ops" ? <MissionView key="Mission ops" /> : activeView === "Satellite health" ? <HealthView key="Satellite health" /> : activeView === "Downlink queue" ? <QueueView key="Downlink queue" /> : <DownlinkView key="Downlink prediction" />}</AnimatePresence></div>
     </section>
-    <div className="dashboard-grid"><section className="panel queue-panel"><div className="panel-head"><div><span className="section-index">02</span><h2>Decision queue</h2></div><button className="text-action" onClick={() => onView("Data queue")}>View all <span>→</span></button></div><div className="queue-summary"><span><b>04</b> items awaiting action</span><span className="priority-label"><i /> 1 PROTECTED ALERT</span></div><div className="queue-list">{queue.slice(0, 3).map((item, index) => <motion.div key={item.id} className="queue-row" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.065 }}><span className={`data-glyph ${item.tone}`}>{item.icon}</span><div className="queue-main"><span className="queue-title">{item.title}</span><span className="queue-id">{item.id} <i>·</i> {item.source}</span></div><div className="value-score"><b>{item.value}</b><span>VALUE</span></div><span className={`decision-pill ${item.tone}`}>{item.action}</span></motion.div>)}</div><button className="queue-footer" onClick={() => onView("Data queue")}>Open data triage <span>↗</span></button></section>
-      <section className="panel link-panel"><div className="panel-head"><div><span className="section-index">03</span><h2>Next downlink</h2></div><span className="link-status"><i /> LINK PREDICTED</span></div><div className="pass-clock"><div><strong>00</strong><small>HR</small><strong>18</strong><small>MIN</small><strong>24</strong><small>SEC</small></div><span>UNTIL NEXT CONTACT</span></div><div className="station-row"><span className="station-icon">⌁</span><div><small>GROUND STATION</small><strong>Svalbard · Pass 1184</strong></div><span className="pass-success">96%<small>SUCCESS</small></span></div><div className="link-stats"><div><span>EST. THROUGHPUT</span><strong>18.7 <small>Mbps</small></strong></div><div><span>SNR FORECAST</span><strong>14.6 <small>dB</small></strong></div><div><span>PACKET LOSS</span><strong>0.8 <small>%</small></strong></div></div><button className="queue-footer" onClick={() => onView("Downlink planner")}>Open contact planner <span>↗</span></button></section></div>
-    <section className="models-strip"><div className="models-title"><span className="section-index">04</span><div><h2>Onboard intelligence</h2><p>Four models. One safety-first decision engine.</p></div><button className="text-action" onClick={() => onView("AI & models")}>Model health <span>→</span></button></div><div className="mini-models">{models.map((model) => <div className="mini-model" key={model.name}><span className="model-glyph">{model.glyph}</span><span className="mini-model-name">{model.name}</span><strong>{model.score}</strong><span className="model-health"><i /> {model.status}</span></div>)}</div></section>
-    <div className="footnote"><span>SIMULATED MISSION DATA <i>·</i> FOR OPERATOR PREVIEW</span><span>DECISIONS ARE EXPLAINABLE, REVERSIBLE & SAFETY-GUARDED</span></div>
-  </motion.div>;
-}
-
-function Metric({ icon, label, value, unit, detail, sub, progress, color }: { icon: string; label: string; value: string; unit: string; detail: string; sub: string; progress: number; color?: string }) {
-  return <motion.div className="metric-card" whileHover={{ y: -3, transition: { duration: 0.18 } }}><div className="metric-top"><span className="metric-icon">{icon}</span><span className="metric-label">{label}</span><span className="metric-state"><i /> SAFE</span></div><div className="metric-value">{value}<small>{unit}</small></div><div className="metric-detail">{detail}</div><div className="metric-bottom"><span>{sub}</span><div className={`meter ${color ?? ""}`}><span style={{ width: `${progress}%` }} /></div></div></motion.div>;
-}
-
-function QueueView() {
-  const [filter, setFilter] = useState("All items");
-  const filtered = filter === "Priority only" ? queue.filter((item) => item.tone === "urgent" || item.tone === "send") : queue;
-  return <motion.div key="Data queue" className="view-content detail-view" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}><div className="detail-heading"><p className="eyebrow">MISSION CONTROL <span>/</span> DATA TRIAGE</p><h1>Every byte has<br /><em>a destination.</em></h1><p>AI-ranked data decisions, with the reason behind every recommendation.</p></div><div className="panel detail-panel"><div className="panel-head"><div><span className="section-index">LIVE</span><h2>Incoming data</h2></div><div className="filter-group">{["All items", "Priority only"].map((option) => <button className={filter === option ? "selected" : ""} key={option} onClick={() => setFilter(option)}>{option}</button>)}</div></div><div className="queue-summary"><span><b>04</b> data products evaluated</span><span className="priority-label"><i /> SAFETY RULES ACTIVE</span></div><div className="expanded-queue">{filtered.map((item, index) => <motion.article className="expanded-queue-item" key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}><span className={`data-glyph ${item.tone}`}>{item.icon}</span><div className="expanded-queue-main"><div className="expanded-title-line"><h3>{item.title}</h3><span className={`decision-pill ${item.tone}`}>{item.action}</span></div><span className="queue-id">{item.id} <i>·</i> {item.source}</span><p>{item.note}</p><div className="reason-tags"><span>VALUE {item.value}/100</span><span>SAFETY CHECK PASSED</span><span>MODEL CONFIDENCE 94%</span></div></div><div className="expanded-score"><strong>{item.value}</strong><small>VALUE</small></div></motion.article>)}</div><div className="explain-note"><span>✳</span><p><b>Explainable by design.</b> Every action balances science value with battery reserve, storage headroom, thermal limits and the next available contact.</p></div></div></motion.div>;
-}
-
-function DownlinkView() {
-  const [reviewRequested, setReviewRequested] = useState(false);
-  return <motion.div key="Downlink planner" className="view-content detail-view" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}><div className="detail-heading"><p className="eyebrow">MISSION CONTROL <span>/</span> COMMUNICATIONS</p><h1>Make every<br /><em>pass count.</em></h1><p>Predicted link quality turns each ground-station window into a smarter delivery plan.</p></div><div className="downlink-grid"><section className="panel next-pass-card"><div className="panel-head"><div><span className="section-index">NEXT PASS / 1184</span><h2>Svalbard ground station</h2></div><span className="link-status"><i /> FORECAST GOOD</span></div><div className="large-countdown">00<span>:</span>18<span>:</span>24<small>UNTIL ACQUISITION</small></div><div className="contact-ruler"><div className="contact-fill" /><span className="contact-now">NOW</span><span className="contact-start">AOS 15:08:24 UTC</span><span className="contact-end">LOS 15:19:52 UTC</span></div><div className="link-stats"><div><span>LINK SUCCESS</span><strong>96 <small>%</small></strong></div><div><span>THROUGHPUT</span><strong>18.7 <small>Mbps</small></strong></div><div><span>PACKET LOSS</span><strong>0.8 <small>%</small></strong></div><div><span>PEAK SNR</span><strong>14.6 <small>dB</small></strong></div></div></section><section className="panel plan-card"><div className="panel-head"><div><span className="section-index">TRANSMISSION PLAN</span><h2>Queue order</h2></div><span className="auto-tag">AUTO-PLANNED</span></div>{queue.slice(0, 3).map((item, i) => <div className="plan-item" key={item.id}><span className="plan-rank">0{i + 1}</span><div><b>{item.title}</b><small>{item.id} · {i === 0 ? "ALERT FIRST" : i === 1 ? "COMPRESSED COPY" : "IF CAPACITY ALLOWS"}</small></div><span className="plan-size">{i === 0 ? "1.2" : i === 1 ? "4.2" : "0.8"} MB</span></div>)}<div className="plan-foot"><span>PLANNED CONTACT USE</span><b>62% <small>OF WINDOW</small></b></div><button className="primary-button" type="button" onClick={() => setReviewRequested(true)}>{reviewRequested ? "Review request sent" : "Review transmission plan"} <span>{reviewRequested ? "✓" : "↗"}</span></button></section></div><div className="forecast-note"><span>⌁</span><p>Link model adapts to weather, SNR and ground-station availability. Queue order can update automatically as conditions change.</p></div></motion.div>;
-}
-
-function ModelsView() {
-  return <motion.div key="AI & models" className="view-content detail-view" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}><div className="detail-heading"><p className="eyebrow">MISSION CONTROL <span>/</span> ONBOARD INTELLIGENCE</p><h1>Small models.<br /><em>Clear decisions.</em></h1><p>Compact onboard AI, governed by hard safety rules and reviewed on Earth.</p></div><div className="model-grid">{models.map((model, index) => <motion.article className="panel model-card" key={model.name} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.07 }}><div className="model-card-top"><span className="model-glyph">{model.glyph}</span><span className="model-health"><i /> {model.status}</span></div><h2>{model.name}</h2><p>{model.description}</p><div className="model-chart"><Sparkline values={model.bars} /></div><div className="model-score"><strong>{model.score}</strong><span>VALIDATION SCORE</span></div></motion.article>)}</div><section className="safety-rules"><div className="panel-head"><div><span className="section-index">GOVERNANCE</span><h2>Non-negotiable safety rules</h2></div><span className="link-status"><i /> ENFORCED ONBOARD</span></div><div className="rule-grid"><div><span>01</span><b>Battery reserve</b><small>Protect a 35% reserve before discretionary compute or downlink.</small></div><div><span>02</span><b>Thermal ceiling</b><small>Pause non-critical work when the spacecraft approaches limits.</small></div><div><span>03</span><b>Protect urgent alerts</b><small>Never discard high-confidence emergency detections.</small></div><div><span>04</span><b>Verified model updates</b><small>Only tested, approved models can return to the satellite.</small></div></div></section></motion.div>;
-}
-
-export default function Home() {
-  const [activeView, setActiveView] = useState<View>("Overview");
-  const [notice, setNotice] = useState("");
-  const goTo = (view: View) => setActiveView(view);
-  const showNotice = () => {
-    setNotice("Operator review requested · local demo");
-    window.setTimeout(() => setNotice(""), 2800);
-  };
-  return <main className="app-shell"><MotionConfig reducedMotion="user"><aside className="sidebar"><a className="product-brand" href="#overview" onClick={(event) => { event.preventDefault(); goTo("Overview"); }}><span className="brand-mark"><i /><i /><i /></span><span>ASTRA<small>MISSION INTELLIGENCE</small></span></a><div className="mission-switch"><span className="mission-avatar">A1</span><span><small>ACTIVE SPACECRAFT</small><strong>ORBITAL-01</strong><em>Low Earth Orbit</em></span><span className="switch-chev">⌄</span></div><span className="nav-label">OPERATIONS</span><nav className="side-nav" aria-label="Mission control views">{navigation.map((item) => <button key={item.label} onClick={() => goTo(item.label)} className={activeView === item.label ? "active" : ""} aria-current={activeView === item.label ? "page" : undefined}><span className="nav-icon">{item.icon}</span>{item.label}{item.label === "Data queue" && <span className="nav-count">04</span>}{item.label === "Overview" && <span className="active-dot" />}</button>)}</nav><div className="sidebar-bottom"><div className="space-status"><span className="status-orbit">◉</span><span><small>SPACECRAFT LINK</small><strong><i /> CONNECTED</strong></span><span className="signal-bars"><i /><i /><i /><i /></span></div><button className="sidebar-help" onClick={showNotice}><span>?</span> Operator guide <span>↗</span></button><div className="operator-profile"><span className="operator-avatar">MC</span><span><b>Mission control</b><small>Ground operator</small></span><span className="profile-menu">···</span></div></div></aside><section className="workspace"><header className="topbar"><div className="breadcrumb"><span>SPACECRAFT</span><i>/</i><b>{activeView.toUpperCase()}</b></div><div className="topbar-actions"><span className="utc-clock"><i /> LIVE TELEMETRY</span><span className="utc-time">14:32:08 <small>UTC</small></span><button className="icon-button notification-button" aria-label="Notifications" onClick={showNotice}>♧<i /></button><span className="top-avatar">MC</span></div></header><div className="workspace-scroll"><AnimatePresence mode="wait" initial={false}>{activeView === "Overview" ? <Overview key="Overview" onView={goTo} /> : activeView === "Data queue" ? <QueueView key="Data queue" /> : activeView === "Downlink planner" ? <DownlinkView key="Downlink planner" /> : <ModelsView key="AI & models" />}</AnimatePresence></div><AnimatePresence>{notice && <motion.div className="toast" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}>{notice}</motion.div>}</AnimatePresence><span className="build-tag">ASTRA OPS <i>·</i> DEMO 0.9</span></section></MotionConfig></main>;
+  </MotionConfig></main>;
 }

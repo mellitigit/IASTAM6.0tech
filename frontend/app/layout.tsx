@@ -33,7 +33,7 @@ const stripExtensionAttributes = `(() => {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+    <html lang="en" className="h-full antialiased" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         {process.env.NODE_ENV === "development" && (
           <Script id="strip-extension-attrs" strategy="beforeInteractive">

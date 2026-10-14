@@ -91,3 +91,35 @@ For each ground-station pass, predicts whether the full payload can be sent and,
 - Sabri et al., 2021 (DVFS); Arnold et al., 2012 (FPGA energy budgets): hardware power ranges
 - ITU-R P.618: rain attenuation / link budget
 - Chen & Guestrin, 2016: XGBoost
+
+---
+
+## Running locally
+
+**Backend** (FastAPI, Python 3.12+)
+
+```bash
+cd backend
+python -m venv .venv && .venv/bin/pip install -r requirements.txt
+cp .env.example .env            # optional overrides
+.venv/bin/fastapi dev app/main.py   # http://localhost:8000/docs
+.venv/bin/python -m pytest
+```
+
+The satellite health endpoint (`POST /api/diagnostics/health`) needs the TorchScript model
+`best_satellite_dvm_traced.pt` (13 MB, not committed). Put it in `backend/app/ml/models/`,
+or point `DVM_MODEL_PATH` at it.
+
+The downlink endpoints (`/api/downlink/model`, `/samples`, `/predict`) use `link_delivery_model.joblib`
+and `link_delivery_meta.json` in the same folder, exported by the last cell of
+`IASTAM_Satellite_Radio_Link_Prediction.ipynb` (scikit-learn 1.8.0). The dashboard's recorded attempts
+come from `link_delivery_samples.json`, rebuilt with
+`.venv/bin/python scripts/make_link_samples.py ../Data/iastam_satellite_radio_link_dataset_100k.csv`.
+
+**Frontend** (Next.js)
+
+```bash
+cd frontend
+cp .env.example .env.local      # FASTAPI_URL, defaults to http://localhost:8000
+npm install && npm run dev      # http://localhost:3000/dashboard → Satellite health
+```

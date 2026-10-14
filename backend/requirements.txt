@@ -1,3 +1,10 @@
 fastapi[standard]>=0.115
 pydantic-settings>=2.6
+python-multipart>=0.0.20
+numpy>=2.0
+torch>=2.9
+pandas>=2.2
+joblib>=1.4
+# must match the version the link-delivery model was exported with (see app/ml/models/link_delivery_meta.json)
+scikit-learn==1.8.0
 pytest>=8.3

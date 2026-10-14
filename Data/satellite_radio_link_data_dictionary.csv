@@ -1,0 +1,72 @@
+column_name,description,unit,data_type,category,role,use_in_main_model,leakage_warning
+scenario_id,Unique row id (one transmission attempt),-,string,identifier,identifier,no,grouping/analysis only
+pass_id,"Id of the simulated satellite pass; rows with the same pass_id share geometry, weather and hardware -> use as GROUP in splits",-,string,identifier,identifier,no,grouping/analysis only
+station_id,"Ground-station archetype id (illustrative, not a real station)",-,string,identifier,identifier,no,grouping/analysis only
+attempt_index_in_pass,Order of the attempt inside its pass,-,int,identifier,identifier,no,grouping/analysis only
+station_climate_zone,Climate archetype of the station,-,category,environment,predictive_input,yes,
+satellite_altitude_km,Circular LEO altitude,km,float,orbital geometry,predictive_input,yes,
+pass_max_elevation_deg,Maximum elevation of the pass (from orbit prediction),deg,float,orbital geometry,predictive_input,yes,
+pass_duration_s,Total visibility duration of the pass above the elevation mask,s,float,orbital geometry,predictive_input,yes,
+elevation_mask_deg,Station minimum elevation (window closes when elevation falls to this value),deg,float,orbital geometry,predictive_input,yes,
+time_since_aos_s,Time elapsed between acquisition of signal and the start of the attempt,s,float,orbital geometry,predictive_input,yes,
+remaining_window_s,Contact time left when the attempt starts (deadline),s,float,contact window,predictive_input,yes,
+distance_km,Slant range at attempt start,km,float,orbital geometry,predictive_input,yes,
+elevation_angle_deg,Elevation angle at attempt start,deg,float,orbital geometry,predictive_input,yes,
+frequency_GHz,"Carrier frequency (X-band, 8.025-8.400 GHz)",GHz,float,radio,predictive_input,yes,
+bandwidth_MHz,Occupied channel bandwidth,MHz,float,radio,predictive_input,yes,
+tx_power_W,Satellite transmitter RF power,W,float,radio,predictive_input,yes,
+satellite_antenna_gain_dBi,Satellite antenna gain,dBi,float,radio,predictive_input,yes,
+ground_antenna_diameter_m,Ground dish diameter,m,float,radio,predictive_input,yes,
+ground_station_antenna_gain_dBi,Ground antenna gain = 10log10(eta (pi D/lambda)^2),dBi,float,radio,predictive_input,yes,
+antenna_pointing_error_deg,RMS ground-antenna tracking error per axis,deg,float,radio,predictive_input,yes,
+satellite_attitude_error_deg,RMS satellite pointing (attitude) error per axis,deg,float,radio,predictive_input,yes,
+receiver_noise_figure_dB,Ground receiver noise figure,dB,float,radio,predictive_input,yes,
+other_losses_dB,"Cable, polarisation mismatch, radome and misc. losses",dB,float,radio,predictive_input,yes,
+implementation_loss_dB,Demodulator/decoder implementation loss,dB,float,radio,predictive_input,yes,
+temperature_C,Ground air temperature,deg C,float,environment,predictive_input,yes,
+weather_state,Coarse weather category used to generate coherent weather,-,category,environment,predictive_input,yes,
+rain_rate_mm_h,Surface rain rate at attempt start,mm/h,float,environment,predictive_input,yes,
+cloud_liquid_water_g_m3,Cloud liquid-water density (not integrated),g/m3,float,environment,predictive_input,yes,
+cloud_thickness_km,Assumed cloud layer thickness along the vertical,km,float,environment,predictive_input,yes,
+relative_humidity_pct,Surface relative humidity,%,float,environment,predictive_input,yes,
+water_vapor_density_g_m3,Surface absolute water-vapour density (from T and RH),g/m3,float,environment,predictive_input,yes,
+atmospheric_turbulence_index,Heuristic 0-10 scintillation-strength index (scales reference scintillation),-,float,environment,predictive_input,yes,
+pointing_loss_dB,Expected combined pointing loss (E[12 e^2/theta3^2] ground + satellite),dB,float,link budget,derived_predictive_input,yes,
+free_space_path_loss_dB,FSPL = 20log10(d_km)+20log10(f_MHz)+32.45,dB,float,link budget,derived_predictive_input,yes,
+rain_attenuation_dB,Slant-path rain attenuation (power-law specific attenuation x effective path),dB,float,link budget,derived_predictive_input,yes,
+cloud_attenuation_dB,"Cloud attenuation (Rayleigh model, K_l * LWC * thickness / sin el)",dB,float,link budget,derived_predictive_input,yes,
+gaseous_attenuation_dB,Oxygen + water-vapour attenuation (equivalent heights / sin el),dB,float,link budget,derived_predictive_input,yes,
+total_atmospheric_loss_dB,Rain + cloud + gas attenuation,dB,float,link budget,derived_predictive_input,yes,
+received_power_dBm,Nominal received signal power at attempt start (no fading),dBm,float,link budget,derived_predictive_input,yes,
+noise_power_dBm,Receiver noise power kTsysB (Tsys includes sky noise raised by attenuation),dBm,float,link budget,derived_predictive_input,yes,
+system_noise_temp_K,System noise temperature,K,float,link budget,derived_predictive_input,yes,
+interference_power_dBm,Mean in-band interference power at the receiver,dBm,float,interference,predictive_input,yes,
+scintillation_std_dB,Std of tropospheric scintillation at attempt start (P.618-style),dB,float,link budget,derived_predictive_input,yes,
+snr_dB,Nominal SNR over the channel bandwidth at attempt start,dB,float,link quality,derived_predictive_input,yes,
+sinr_dB,Nominal SINR over the channel bandwidth at attempt start,dB,float,link quality,derived_predictive_input,yes,
+mission_data_class,Type of file queued for downlink,-,category,workload,predictive_input,yes,
+file_size_MB,File size (decimal MB = 1e6 bytes),MB,float,workload,predictive_input,yes,
+packet_size_bytes,Total packet size incl. 32-byte header,bytes,int,workload,predictive_input,yes,
+max_retransmissions,Retransmissions allowed per packet before the file is declared failed,-,int,workload,predictive_input,yes,
+modcod_policy,adaptive (chosen from predicted Es/N0 minus margin) or fixed_preplanned,-,category,workload,predictive_input,yes,
+modulation_coding,Selected modulation and code rate (DVB-S2-like table),-,category,workload,derived_predictive_input,yes,
+estimated_data_rate_Mbps,Gross information rate of the selected MODCOD at the chosen bandwidth,Mbit/s,float,workload,derived_predictive_input,yes,
+link_margin_dB,Es/N0 at attempt start minus MODCOD threshold,dB,float,derived,derived_predictive_input,yes,
+estimated_packet_error_prob,Packet error probability at nominal start conditions,-,float,derived,derived_predictive_input,yes,
+effective_rate_Mbps,Expected goodput at start = rate x (1-PER) x payload efficiency,Mbit/s,float,derived,derived_predictive_input,yes,
+window_mean_effective_rate_Mbps,Forecast mean goodput over the remaining window (nominal conditions),Mbit/s,float,derived,derived_predictive_input,yes,
+predicted_mean_sinr_window_dB,"Mean forecast SINR over the window (orbit prediction, frozen weather, no fading)",dB,float,derived,derived_predictive_input,yes,
+predicted_min_sinr_window_dB,Minimum forecast SINR over the window,dB,float,derived,derived_predictive_input,yes,
+estimated_window_capacity_MB,Forecast deliverable payload during the remaining window,MB,float,derived,derived_predictive_input,yes,
+estimated_transfer_time_s,File bits / window-mean effective rate (capped at 1e6 s),s,float,derived,derived_predictive_input,yes,
+capacity_ratio,estimated_window_capacity_MB / file_size_MB,-,float,derived,derived_predictive_input,yes,
+time_ratio,estimated_transfer_time_s / remaining_window_s,-,float,derived,derived_predictive_input,yes,
+file_packets,Number of packets needed for the file,-,int,workload,derived_predictive_input,yes,
+delivery_success,PRIMARY TARGET: 1 if the whole file was received and acknowledged before the deadline,-,int,target,outcome,no,POST-TRANSMISSION / TARGET - never use as input
+delivery_time_s,Time from attempt start to final ACK (missing when delivery failed),s,float,outcome,outcome,no,POST-TRANSMISSION / TARGET - never use as input
+packet_delivery_ratio,Unique packets received correctly at the deadline / packets in the file,-,float,outcome,outcome,no,POST-TRANSMISSION / TARGET - never use as input
+transmission_efficiency,Unique packets delivered / total packet transmissions,-,float,outcome,outcome,no,POST-TRANSMISSION / TARGET - never use as input
+retransmission_count,Total retransmissions during the attempt,-,int,outcome,outcome,no,POST-TRANSMISSION / TARGET - never use as input
+outage_fraction,Fraction of active transmit time with packet error probability > 0.9,-,float,outcome,outcome,no,POST-TRANSMISSION / TARGET - never use as input
+delivery_failure_reason,success / insufficient_contact_time / combined_time_and_link / link_outage / excessive_packet_errors / ack_deadline_miss,-,category,outcome,outcome,no,POST-TRANSMISSION / TARGET - never use as input
+success_probability_simulated,Monte-Carlo estimate (n_repl independent re-simulations) of P(success) for the same inputs,-,float,outcome,outcome,no,POST-TRANSMISSION / TARGET - never use as input
